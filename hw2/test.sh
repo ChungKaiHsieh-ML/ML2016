@@ -50,12 +50,7 @@ def feature_normalize(data_set):
 
 	return tmp
 
-def feature_normalize_2(data_set):
-	tmp = data_set
-	for i in range(np.shape(tmp)[1]):
-		tmp[: , i] = ( tmp[:,i] - np.mean(tmp[:,i])) 
 
-	return tmp
 
 
 def sigmoid(X):
@@ -65,17 +60,30 @@ def sigmoid(X):
 
 	return d  
 
+def derivation_sigmoid(X):
+
+	return sigmoid(X) * ( 1 - sigmoid(X))
 
 
 
 
-def testing(X,theta):
+
+def testing_neural_network(X,w1,w2):
 	X_tmp = X
 	n = X.shape[0]
 	bias_ones = np.ones( (n,1) , dtype='float32')
 	X_tmp = np.append(X, bias_ones, axis=1)
-	predictions_tmp = sigmoid( X_tmp.dot(theta) )
-	predictions = np.rint( predictions_tmp ).astype(int)
+
+	# forward propagation
+	z1 = np.dot(w1, X_tmp.T )
+	a1 = sigmoid(z1)
+	z2 = np.dot(w2, a1)
+	y_p = sigmoid(z2)
+
+	y_p = y_p.T
+
+	predictions = np.rint( y_p ).astype(int)
+
 	return  predictions
 
 
@@ -93,24 +101,26 @@ def write_file(predictions,file_name):
 
 if __name__ == '__main__':
 
-
 	start_time = time.time()
 
 	model_name = sys.argv[1]
 	testing_data_name = sys.argv[2]
 	prediction_name = sys.argv[3]
 
+
+
 	(testing_set) = read_data ( testing_data_name )
 	testing_set_normalized = feature_normalize( testing_set )
 
 	#load parameter
-	theta_name = model_name+".npy"
-	theta = np.load(theta_name)
+	w1_name = model_name + "_w1.npy"
+	w2_name = model_name + "_w2.npy"
+	w1 = np.load(w1_name)
+	w2 = np.load(w2_name)
 
-	predictions = testing(testing_set_normalized,theta)
 
-
-	# testing_set = (testing_set)	
+	# testing_set = (testing_set)
+	predictions = testing_neural_network(testing_set_normalized, w1, w2)
 	write_file(predictions, prediction_name)
 
 	end_time = time.time()

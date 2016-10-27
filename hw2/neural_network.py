@@ -7,9 +7,8 @@ import math
 import csv
 import time
 import random
-import sys
 
-def read_data(training_data_name):
+def read_data():
 	'''
 	read data
 	'''
@@ -19,7 +18,7 @@ def read_data(training_data_name):
 	for i in range(57):
 		columns_name.append(str(i))
 	columns_name.append('label')
-	training_data = pd.read_csv(training_data_name, sep=',' , encoding='latin1' , names=columns_name)
+	training_data = pd.read_csv('data/spam_train.csv', sep=',' , encoding='latin1' , names=columns_name)
 
 	#select feature
 	columns_select = []
@@ -29,7 +28,10 @@ def read_data(training_data_name):
 	columns_select  = ['label']
 	training_yhat     = training_data.as_matrix(columns=columns_select ).astype(dtype='float32')
 
-
+	print(training_feature)
+	print("training_feature.shape" + str(training_feature.shape))
+	print(training_yhat)
+	print("training_yhat.shape" + str(training_yhat.shape))
 
 	training_feature_total = training_feature
 	training_yhat_total = training_yhat
@@ -43,8 +45,33 @@ def read_data(training_data_name):
 	training_feature ,validation_feature = training_feature[training_idx,:], training_feature[validation_idx,:]
 	training_yhat ,validation_yhat = training_yhat[training_idx,:], training_yhat[validation_idx,:]
 
+	print("training_feature.shape" + str(training_feature.shape))
+	print("validation_feature.shape" + str(validation_feature.shape))
+	print("training_yhat.shape" + str(training_yhat.shape))
+	print("validation_yhat.shape" + str(validation_yhat.shape))
 
-	return training_feature_total, training_yhat_total , training_feature , training_yhat, validation_feature, validation_yhat 
+
+	# #Testing Data
+	#read data
+	columns_name = ['data_id']
+	for i in range(57):
+		columns_name.append(str(i))
+
+	testing_data = pd.read_csv('data/spam_test.csv', sep=',', encoding='latin1', names=columns_name)
+
+	columns_select = []
+	for i in range(57):
+		columns_select.append(str(i))
+
+	testing_set = testing_data.as_matrix(columns=columns_select).astype(dtype='float32')
+	print(testing_set)
+	print("testing_set.shape" + str(testing_set.shape))
+
+	print("training_feature_total.shape" + str(training_feature_total.shape) )
+	print("training_feature.shape" + str( training_feature.shape) )
+	print("validation_feature.shape" + str( validation_feature.shape) )
+
+	return training_feature_total, training_yhat_total , training_feature , training_yhat, validation_feature, validation_yhat ,testing_set
 
 
 '''
@@ -205,7 +232,11 @@ def neural_network(X, y, X_validation, y_validation, w1 , w2, learning_rate, epo
 				training_accuracy =  compute_accuracy_neural_network(X_tmp, y, w1 , w2)
 				print(" [cost] - validation data   : " + str( compute_cost_neural_network(X_validation_tmp, y_validation, w1, w2)))
 				validation_accuracy =  compute_accuracy_neural_network(X_validation_tmp, y_validation, w1 , w2)
-
+				# print(" [cost] - validation data : " + str( compute_cost(X_validation_tmp, y_validation, theta)))
+				# compute_accuracy(X_validation_tmp, y_validation, theta)
+				# cost_training_history[i, 0] = compute_cost(X_tmp, y, theta)
+				# cost_validation_history[i,0] = compute_cost(X_validation_tmp,y_validation,theta)
+				# validation_accuracy =  compute_accuracy(X_validation_tmp, y_validation, theta)
 
 	return w1,w2, training_accuracy, validation_accuracy
 	# return theta, cost_training_history, cost_validation_history , validation_accuracy
@@ -249,13 +280,8 @@ if __name__ == '__main__':
 
 	start_time = time.time()
 
-	training_data_name = sys.argv[1]
-	model_name = sys.argv[2]
-
-
-
-	training_accuracy_th  = 0.93
-	validation_accuracy_th = 0.94
+	training_accuracy_th  = 0.95
+	validation_accuracy_th = 0.96
 
 	for k in range(100000):
 
@@ -264,14 +290,18 @@ if __name__ == '__main__':
 		print("****  Data Changes  ****")
 		print("**************************")
 		print("**************************")
+		# time.sleep(1)
 
-
-		(training_feature_total, training_yhat_total, training_feature , training_yhat, validation_feature, validation_yhat ) = read_data(training_data_name)
-
+		(training_feature_total, training_yhat_total, training_feature , training_yhat, validation_feature, validation_yhat ,testing_set) = read_data()
+		# training_feature_total_normalized = feature_normalize(training_feature_total) 
+		# training_feature_normalized = feature_normalize(training_feature) 
+		# validation_feature_normalized = feature_normalize(validation_feature) 
+		# testing_set_normalized = feature_normalize(testing_set)
 
 		training_feature_total_normalized = feature_normalize(training_feature_total) 
 		training_feature_normalized = feature_normalize(training_feature)  
 		validation_feature_normalized = feature_normalize(validation_feature) 
+		testing_set_normalized = feature_normalize(testing_set) 
 
 
 		epochs = 5
@@ -289,9 +319,7 @@ if __name__ == '__main__':
 
 		if( training_accuracy >= training_accuracy_th and validation_accuracy >= validation_accuracy_th):
 			# (w1,w2, training_accuracy, validation_accuracy) = neural_network(training_feature_total_normalized, training_yhat_total, validation_feature_normalized, validation_yhat, w1 , w2, learning_rate, epochs)
-			print("********************************************************************")
 			print(" ****** Hidden Layer " + str(hidden_layer_num) + "  *************")
-			print("********************************************************************")
 			break
 		else:
 			print("accuracy is not enough ")
@@ -312,9 +340,7 @@ if __name__ == '__main__':
 
 		if( training_accuracy >= training_accuracy_th and validation_accuracy >= validation_accuracy_th):
 			# (w1,w2, training_accuracy, validation_accuracy) = neural_network(training_feature_total_normalized, training_yhat_total, validation_feature_normalized, validation_yhat, w1 , w2, learning_rate, epochs)
-			print("********************************************************************")
 			print(" ****** Hidden Layer " + str(hidden_layer_num) + "  *************")
-			print("********************************************************************")
 			break
 		else:
 			print("accuracy is not enough ")
@@ -325,7 +351,7 @@ if __name__ == '__main__':
 
 		feature_num = 57
 		mu, sigma = 0, 0.8
-		hidden_layer_num = 10
+		hidden_layer_num = 5
 		w1 = sigma * np.random.randn( hidden_layer_num , feature_num +1) + mu
 		w2 = sigma * np.random.randn( 1 , hidden_layer_num ) + mu
 
@@ -335,44 +361,16 @@ if __name__ == '__main__':
 
 		if( training_accuracy >= training_accuracy_th and validation_accuracy >= validation_accuracy_th):
 			# (w1,w2, training_accuracy, validation_accuracy) = neural_network(training_feature_total_normalized, training_yhat_total, validation_feature_normalized, validation_yhat, w1 , w2, learning_rate, epochs)
-			print("********************************************************************")
 			print(" ****** Hidden Layer " + str(hidden_layer_num) + "  *************")
-			print("********************************************************************")
-			break
-		else:
-			print("accuracy is not enough ")
-
-		epochs = 5
-		learning_rate = 0.8
-
-		feature_num = 57
-		mu, sigma = 0, 0.8
-		hidden_layer_num = 15
-		w1 = sigma * np.random.randn( hidden_layer_num , feature_num +1) + mu
-		w2 = sigma * np.random.randn( 1 , hidden_layer_num ) + mu
-
-
-		(w1,w2, training_accuracy, validation_accuracy) = neural_network(training_feature_normalized, training_yhat, validation_feature_normalized, validation_yhat, w1 , w2, learning_rate, epochs)
-		
-
-		if( training_accuracy >= training_accuracy_th and validation_accuracy >= validation_accuracy_th):
-			# (w1,w2, training_accuracy, validation_accuracy) = neural_network(training_feature_total_normalized, training_yhat_total, validation_feature_normalized, validation_yhat, w1 , w2, learning_rate, epochs)
-			print("********************************************************************")
-			print(" ****** Hidden Layer " + str(hidden_layer_num) + "  *************")
-			print("********************************************************************")
 			break
 		else:
 			print("accuracy is not enough ")
 
 
-
-	# Save model
-	w1_name = model_name + "_w1"
-	w2_name = model_name + "_w2"
-
-	np.save(w1_name, w1)
-	np.save(w2_name, w2)
-
+	# testing_set = (testing_set)
+	output_filename = "prediction.csv"
+	predictions = testing_neural_network(testing_set_normalized, w1, w2)
+	write_file(predictions, output_filename)
 
 	end_time = time.time()
 
